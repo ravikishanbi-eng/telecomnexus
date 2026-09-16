@@ -15,6 +15,9 @@ from customer_management import customer_management_screen
 from contract_management import contract_management_screen
 from service_management import service_management_screen
 from network_management import network_management_screen
+from service_provisioning import service_provisioning_screen
+from billing import billing_dashboard
+from dashboard import dashboard
 
 from services.customer_service import (
     customer_exists,
@@ -91,9 +94,7 @@ st.markdown(
 )
 
 st.markdown(
-    '<div class="sub-title">'
-    'Customer & Contract Management'
-    '</div>',
+    '<div class="sub-title">Customer & Contract Management</div>',
     unsafe_allow_html=True,
 )
 
@@ -103,7 +104,6 @@ st.markdown(
 # ---------------------------------------------------------
 
 with st.sidebar:
-
     st.header("Application")
 
     page = st.radio(
@@ -113,35 +113,50 @@ with st.sidebar:
             "Customer Management",
             "Contract Management",
             "Service Management",
+            "Service Provisioning",
             "Network Management",
+            "Billing",
             "Create Customer & Contract",
             "Database Health",
         ],
     )
 
-if page == "Customer Management":
 
+if page == "Dashboard":
+    dashboard()
+
+    st.stop()
+
+
+if page == "Customer Management":
     customer_management_screen()
 
     st.stop()
 
 if page == "Contract Management":
-
     contract_management_screen()
 
     st.stop()
 
 if page == "Service Management":
-
     service_management_screen()
 
-    st.stop()    
+    st.stop()
+
+if page == "Service Provisioning":
+    service_provisioning_screen()
+
+    st.stop()
 
 if page == "Network Management":
-
     network_management_screen()
 
-    st.stop()    
+    st.stop()
+
+if page == "Billing":
+    billing_dashboard()
+
+    st.stop()
 
     st.divider()
 
@@ -155,24 +170,17 @@ if page == "Network Management":
 # =========================================================
 
 if page == "Database Health":
-
     st.header("Database Health")
 
     try:
-
         conn = get_connection()
 
         with conn.cursor() as cur:
-
-            cur.execute(
-                "SELECT CURRENT_DATABASE(), CURRENT_USER"
-            )
+            cur.execute("SELECT CURRENT_DATABASE(), CURRENT_USER")
 
             database, user = cur.fetchone()
 
-            cur.execute(
-                "SELECT version()"
-            )
+            cur.execute("SELECT version()")
 
             version = cur.fetchone()[0]
 
@@ -190,19 +198,13 @@ if page == "Database Health":
             user,
         )
 
-        st.success(
-            "PostgreSQL connection is healthy."
-        )
+        st.success("PostgreSQL connection is healthy.")
 
         with st.expander("PostgreSQL Version"):
-
             st.code(version)
 
     except Exception as e:
-
-        st.error(
-            f"Database connection failed: {e}"
-        )
+        st.error(f"Database connection failed: {e}")
 
 
 # =========================================================
@@ -210,7 +212,6 @@ if page == "Database Health":
 # =========================================================
 
 if page == "Create Customer & Contract":
-
     st.header("Create Customer & Contract")
 
     st.info(
@@ -223,32 +224,26 @@ if page == "Create Customer & Contract":
     # -----------------------------------------------------
 
     st.markdown(
-        '<div class="section-header">'
-        '1. Customer Information'
-        '</div>',
+        '<div class="section-header">1. Customer Information</div>',
         unsafe_allow_html=True,
     )
 
     with st.container():
-
         col1, col2, col3 = st.columns(3)
 
         with col1:
-
             first_name = st.text_input(
                 "First Name *",
                 placeholder="Ravi",
             )
 
         with col2:
-
             last_name = st.text_input(
                 "Last Name *",
                 placeholder="Kishan",
             )
 
         with col3:
-
             customer_type = st.selectbox(
                 "Customer Type *",
                 [
@@ -260,14 +255,12 @@ if page == "Create Customer & Contract":
         col1, col2 = st.columns(2)
 
         with col1:
-
             email = st.text_input(
                 "Email *",
                 placeholder="customer@example.com",
             )
 
         with col2:
-
             phone = st.text_input(
                 "Phone *",
                 placeholder="9876543210",
@@ -281,14 +274,12 @@ if page == "Create Customer & Contract":
         col1, col2, col3 = st.columns(3)
 
         with col1:
-
             city = st.text_input(
                 "City *",
                 placeholder="Hyderabad",
             )
 
         with col2:
-
             state = st.selectbox(
                 "State *",
                 [
@@ -308,7 +299,6 @@ if page == "Create Customer & Contract":
             )
 
         with col3:
-
             postal_code = st.text_input(
                 "Postal Code *",
                 placeholder="500001",
@@ -321,16 +311,13 @@ if page == "Create Customer & Contract":
     # -----------------------------------------------------
 
     st.markdown(
-        '<div class="section-header">'
-        '2. Contract Information'
-        '</div>',
+        '<div class="section-header">2. Contract Information</div>',
         unsafe_allow_html=True,
     )
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
-
         contract_type = st.selectbox(
             "Contract Type *",
             [
@@ -341,25 +328,22 @@ if page == "Create Customer & Contract":
         )
 
     with col2:
-
         contract_status = st.selectbox(
             "Contract Status *",
             [
                 "ACTIVE",
                 "PENDING",
+                "DE-ACTIVE",
             ],
         )
 
     with col3:
-
         auto_renew = st.checkbox(
             "Auto Renew",
             value=True,
         )
 
-    start_date = st.date_input(
-        "Contract Start Date *"
-    )
+    start_date = st.date_input("Contract Start Date *")
 
     st.divider()
 
@@ -368,36 +352,26 @@ if page == "Create Customer & Contract":
     # -----------------------------------------------------
 
     st.markdown(
-        '<div class="section-header">'
-        '3. Contract Detail'
-        '</div>',
+        '<div class="section-header">3. Contract Detail</div>',
         unsafe_allow_html=True,
     )
 
     try:
-
         products = get_products()
 
     except Exception as e:
-
-        st.error(
-            f"Unable to load products: {e}"
-        )
+        st.error(f"Unable to load products: {e}")
 
         st.stop()
 
     if not products:
-
-        st.warning(
-            "No active products/rate schedules found."
-        )
+        st.warning("No active products/rate schedules found.")
 
         st.stop()
 
     product_options = {}
 
     for row in products:
-
         (
             product_id,
             product_code,
@@ -441,14 +415,11 @@ if page == "Create Customer & Contract":
         list(product_options.keys()),
     )
 
-    selected_product = product_options[
-        selected_product_label
-    ]
+    selected_product = product_options[selected_product_label]
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
-
         quantity = st.number_input(
             "Quantity",
             min_value=1,
@@ -458,18 +429,14 @@ if page == "Create Customer & Contract":
         )
 
     with col2:
-
         monthly_price = st.number_input(
             "Agreed Monthly Price",
             min_value=0.0,
-            value=float(
-                selected_product["monthly_charge"]
-            ),
+            value=float(selected_product["monthly_charge"]),
             step=10.0,
         )
 
     with col3:
-
         discount_amount = st.number_input(
             "Discount Amount",
             min_value=0.0,
@@ -477,37 +444,24 @@ if page == "Create Customer & Contract":
             step=10.0,
         )
 
-    tax_percent = float(
-        selected_product["tax_percentage"]
-    )
+    tax_percent = float(selected_product["tax_percentage"])
 
     # -----------------------------------------------------
     # PRICE CALCULATION
     # -----------------------------------------------------
 
-    base_amount = (
-        Decimal(str(monthly_price))
-        * Decimal(str(quantity))
-    )
+    base_amount = Decimal(str(monthly_price)) * Decimal(str(quantity))
 
-    discount = Decimal(
-        str(discount_amount)
-    )
+    discount = Decimal(str(discount_amount))
 
     taxable_amount = max(
         Decimal("0"),
         base_amount - discount,
     )
 
-    tax_amount = (
-        taxable_amount
-        * Decimal(str(tax_percent))
-        / Decimal("100")
-    )
+    tax_amount = taxable_amount * Decimal(str(tax_percent)) / Decimal("100")
 
-    total_monthly = (
-        taxable_amount + tax_amount
-    )
+    total_monthly = taxable_amount + tax_amount
 
     st.markdown("### Monthly Billing Preview")
 
@@ -539,41 +493,20 @@ if page == "Create Customer & Contract":
     # SELECTED PRODUCT INFORMATION
     # -----------------------------------------------------
 
-    with st.expander(
-        "Selected Product Information"
-    ):
-
+    with st.expander("Selected Product Information"):
         col1, col2, col3, col4 = st.columns(4)
 
-        col1.write(
-            f"**Product:** "
-            f"{selected_product['product_name']}"
-        )
+        col1.write(f"**Product:** {selected_product['product_name']}")
 
-        col2.write(
-            f"**Technology:** "
-            f"{selected_product['technology']}"
-        )
+        col2.write(f"**Technology:** {selected_product['technology']}")
 
-        col3.write(
-            f"**Download:** "
-            f"{selected_product['download_speed']} Mbps"
-        )
+        col3.write(f"**Download:** {selected_product['download_speed']} Mbps")
 
-        col4.write(
-            f"**Upload:** "
-            f"{selected_product['upload_speed']} Mbps"
-        )
+        col4.write(f"**Upload:** {selected_product['upload_speed']} Mbps")
 
-        st.write(
-            f"**Activation Fee:** "
-            f"₹{selected_product['activation_charge']:,.2f}"
-        )
+        st.write(f"**Activation Fee:** ₹{selected_product['activation_charge']:,.2f}")
 
-        st.write(
-            f"**Tax:** "
-            f"{selected_product['tax_percentage']}%"
-        )
+        st.write(f"**Tax:** {selected_product['tax_percentage']}%")
 
     st.divider()
 
@@ -588,7 +521,6 @@ if page == "Create Customer & Contract":
     )
 
     if create_button:
-
         # ---------------------------------------------
         # Validate customer
         # ---------------------------------------------
@@ -615,20 +547,15 @@ if page == "Create Customer & Contract":
             discount=discount,
         )
 
-        all_errors = (
-            customer_errors
-            + contract_errors
-        )
+        all_errors = customer_errors + contract_errors
 
         # ---------------------------------------------
         # Price validation
         # ---------------------------------------------
 
         if discount > base_amount:
-
             all_errors.append(
-                "Discount cannot be greater than "
-                "the base monthly amount."
+                "Discount cannot be greater than the base monthly amount."
             )
 
         # ---------------------------------------------
@@ -636,9 +563,7 @@ if page == "Create Customer & Contract":
         # ---------------------------------------------
 
         if all_errors:
-
             for error in all_errors:
-
                 st.error(error)
 
             st.stop()
@@ -653,7 +578,6 @@ if page == "Create Customer & Contract":
         )
 
         if existing_customer:
-
             (
                 existing_id,
                 existing_number,
@@ -661,13 +585,10 @@ if page == "Create Customer & Contract":
                 existing_phone,
             ) = existing_customer
 
-            st.error(
-                "Customer already exists."
-            )
+            st.error("Customer already exists.")
 
             st.warning(
-                f"Customer ID: {existing_id} | "
-                f"Customer Number: {existing_number}"
+                f"Customer ID: {existing_id} | Customer Number: {existing_number}"
             )
 
             st.stop()
@@ -679,32 +600,28 @@ if page == "Create Customer & Contract":
         conn = None
 
         try:
-
             conn = get_connection()
 
             # psycopg2 transaction starts automatically
             # when the first SQL statement is executed.
 
             with conn.cursor() as cur:
-
                 # -----------------------------
                 # Customer
                 # -----------------------------
 
-                customer_id, customer_number = (
-                    create_customer(
-                        cur=cur,
-                        first_name=first_name.strip(),
-                        last_name=last_name.strip(),
-                        email=email.strip(),
-                        phone=phone.strip(),
-                        address_line1=address_line1.strip(),
-                        city=city.strip(),
-                        state=state,
-                        postal_code=postal_code.strip(),
-                        customer_type=customer_type,
-                        country="India",
-                    )
+                customer_id, customer_number = create_customer(
+                    cur=cur,
+                    first_name=first_name.strip(),
+                    last_name=last_name.strip(),
+                    email=email.strip(),
+                    phone=phone.strip(),
+                    address_line1=address_line1.strip(),
+                    city=city.strip(),
+                    state=state,
+                    postal_code=postal_code.strip(),
+                    customer_type=customer_type,
+                    country="India",
                 )
 
                 # -----------------------------
@@ -719,9 +636,7 @@ if page == "Create Customer & Contract":
                     contract_status=contract_status,
                     auto_renew=auto_renew,
                     product_id=selected_product["product_id"],
-                    rate_schedule_id=selected_product[
-                        "rate_schedule_id"
-                    ],
+                    rate_schedule_id=selected_product["rate_schedule_id"],
                     quantity=quantity,
                     agreed_monthly_price=monthly_price,
                     discount_amount=discount_amount,
@@ -735,17 +650,13 @@ if page == "Create Customer & Contract":
 
             conn.commit()
 
-            st.success(
-                "Customer and contract created successfully."
-            )
+            st.success("Customer and contract created successfully.")
 
             # ---------------------------------
             # Result
             # ---------------------------------
 
-            st.markdown(
-                "### Created Records"
-            )
+            st.markdown("### Created Records")
 
             col1, col2, col3 = st.columns(3)
 
@@ -761,9 +672,7 @@ if page == "Create Customer & Contract":
 
             col3.metric(
                 "Contract Detail ID",
-                contract_result[
-                    "contract_detail_id"
-                ],
+                contract_result["contract_detail_id"],
             )
 
             st.info(
@@ -787,20 +696,13 @@ if page == "Create Customer & Contract":
             st.balloons()
 
         except Exception as e:
-
             if conn:
-
                 conn.rollback()
 
-            st.error(
-                "Transaction failed. "
-                "No customer/contract records were committed."
-            )
+            st.error("Transaction failed. No customer/contract records were committed.")
 
             st.exception(e)
 
         finally:
-
             if conn:
-
                 conn.close()
