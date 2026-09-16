@@ -30,6 +30,7 @@ CONTRACT_STATUSES = [
 # UTILITY FUNCTIONS
 # ============================================================
 
+
 def calculate_end_date(contract_type, start_date):
 
     if contract_type == "MONTHLY":
@@ -56,25 +57,16 @@ def format_currency(value):
 # CUSTOMER LOOKUP
 # ============================================================
 
+
 def get_customers():
 
     conn = get_connection()
 
     try:
-
         with conn.cursor() as cur:
-
             cur.execute(
                 """
-                SELECT
-                    customer_id,
-                    customer_number,
-                    first_name,
-                    last_name,
-                    email,
-                    customer_status
-                FROM crm.customer
-                ORDER BY customer_id DESC
+                SELECT * from crm.vw_customer
                 """
             )
 
@@ -95,7 +87,6 @@ def get_customers():
             )
 
     finally:
-
         conn.close()
 
 
@@ -103,14 +94,13 @@ def get_customers():
 # PRODUCT / RATE LOOKUP
 # ============================================================
 
+
 def get_active_products():
 
     conn = get_connection()
 
     try:
-
         with conn.cursor() as cur:
-
             cur.execute(
                 """
                 SELECT
@@ -173,13 +163,13 @@ def get_active_products():
             )
 
     finally:
-
         conn.close()
 
 
 # ============================================================
 # CONTRACT SEARCH
 # ============================================================
+
 
 def search_contracts(
     search_text="",
@@ -191,9 +181,7 @@ def search_contracts(
     conn = get_connection()
 
     try:
-
         with conn.cursor() as cur:
-
             query = """
                 SELECT DISTINCT
                     c.contract_id,
@@ -243,7 +231,6 @@ def search_contracts(
             params = []
 
             if search_text:
-
                 query += """
                     AND (
                         c.contract_number ILIKE %s
@@ -267,7 +254,6 @@ def search_contracts(
                 )
 
             if status:
-
                 query += """
                     AND c.contract_status = %s
                 """
@@ -275,7 +261,6 @@ def search_contracts(
                 params.append(status)
 
             if contract_type:
-
                 query += """
                     AND c.contract_type = %s
                 """
@@ -334,7 +319,6 @@ def search_contracts(
             )
 
     finally:
-
         conn.close()
 
 
@@ -342,14 +326,13 @@ def search_contracts(
 # CONTRACT DETAILS
 # ============================================================
 
+
 def get_contract_details(contract_id):
 
     conn = get_connection()
 
     try:
-
         with conn.cursor() as cur:
-
             cur.execute(
                 """
                 SELECT
@@ -421,7 +404,6 @@ def get_contract_details(contract_id):
             )
 
     finally:
-
         conn.close()
 
 
@@ -429,14 +411,13 @@ def get_contract_details(contract_id):
 # CONTRACT HEADER
 # ============================================================
 
+
 def get_contract(contract_id):
 
     conn = get_connection()
 
     try:
-
         with conn.cursor() as cur:
-
             cur.execute(
                 """
                 SELECT
@@ -496,13 +477,13 @@ def get_contract(contract_id):
             )
 
     finally:
-
         conn.close()
 
 
 # ============================================================
 # CREATE CONTRACT
 # ============================================================
+
 
 def create_contract(
     customer_id,
@@ -516,9 +497,7 @@ def create_contract(
     conn = get_connection()
 
     try:
-
         with conn.cursor() as cur:
-
             # ------------------------------------------------
             # Generate contract ID
             # ------------------------------------------------
@@ -542,9 +521,7 @@ def create_contract(
 
             contract_id = cur.fetchone()[0]
 
-            contract_number = (
-                f"CON-{contract_id:09d}"
-            )
+            contract_number = f"CON-{contract_id:09d}"
 
             end_date = calculate_end_date(
                 contract_type,
@@ -596,7 +573,6 @@ def create_contract(
                 details,
                 start=1,
             ):
-
                 cur.execute(
                     """
                     SELECT
@@ -617,9 +593,7 @@ def create_contract(
                     """
                 )
 
-                contract_detail_id = (
-                    cur.fetchone()[0]
-                )
+                contract_detail_id = cur.fetchone()[0]
 
                 cur.execute(
                     """
@@ -678,9 +652,7 @@ def create_contract(
                     """
                 )
 
-                rate_schedule_id = (
-                    cur.fetchone()[0]
-                )
+                rate_schedule_id = cur.fetchone()[0]
 
                 cur.execute(
                     """
@@ -703,9 +675,7 @@ def create_contract(
                         rate_schedule_id,
                         contract_id,
                         contract_detail_id,
-                        detail[
-                            "rate_schedule_id"
-                        ],
+                        detail["rate_schedule_id"],
                         start_date,
                         end_date,
                         detail["monthly_price"],
@@ -721,19 +691,18 @@ def create_contract(
         }
 
     except Exception:
-
         conn.rollback()
 
         raise
 
     finally:
-
         conn.close()
 
 
 # ============================================================
 # EDIT CONTRACT
 # ============================================================
+
 
 def update_contract(
     contract_id,
@@ -745,9 +714,7 @@ def update_contract(
     conn = get_connection()
 
     try:
-
         with conn.cursor() as cur:
-
             cur.execute(
                 """
                 UPDATE crm.contract
@@ -768,27 +735,23 @@ def update_contract(
             )
 
             if cur.rowcount == 0:
-
-                raise ValueError(
-                    "Contract not found."
-                )
+                raise ValueError("Contract not found.")
 
         conn.commit()
 
     except Exception:
-
         conn.rollback()
 
         raise
 
     finally:
-
         conn.close()
 
 
 # ============================================================
 # RENEW CONTRACT
 # ============================================================
+
 
 def renew_contract(
     contract_id,
@@ -799,9 +762,7 @@ def renew_contract(
     conn = get_connection()
 
     try:
-
         with conn.cursor() as cur:
-
             cur.execute(
                 """
                 SELECT
@@ -816,17 +777,10 @@ def renew_contract(
             row = cur.fetchone()
 
             if not row:
-
-                raise ValueError(
-                    "Contract not found."
-                )
+                raise ValueError("Contract not found.")
 
             if row[0] == "TERMINATED":
-
-                raise ValueError(
-                    "A terminated contract "
-                    "cannot be renewed."
-                )
+                raise ValueError("A terminated contract cannot be renewed.")
 
             new_end_date = calculate_end_date(
                 contract_type,
@@ -858,19 +812,18 @@ def renew_contract(
         return new_end_date
 
     except Exception:
-
         conn.rollback()
 
         raise
 
     finally:
-
         conn.close()
 
 
 # ============================================================
 # CHANGE PLAN
 # ============================================================
+
 
 def change_plan(
     contract_id,
@@ -884,9 +837,7 @@ def change_plan(
     conn = get_connection()
 
     try:
-
         with conn.cursor() as cur:
-
             # --------------------------------------------
             # Lock contract
             # --------------------------------------------
@@ -906,10 +857,7 @@ def change_plan(
             contract = cur.fetchone()
 
             if not contract:
-
-                raise ValueError(
-                    "Contract not found."
-                )
+                raise ValueError("Contract not found.")
 
             contract_end_date = contract[0]
             contract_status = contract[1]
@@ -918,11 +866,8 @@ def change_plan(
                 "TERMINATED",
                 "EXPIRED",
             ):
-
                 raise ValueError(
-                    "Plan cannot be changed "
-                    "for a terminated or "
-                    "expired contract."
+                    "Plan cannot be changed for a terminated or expired contract."
                 )
 
             # --------------------------------------------
@@ -968,9 +913,7 @@ def change_plan(
                 """
             )
 
-            new_detail_id = (
-                cur.fetchone()[0]
-            )
+            new_detail_id = cur.fetchone()[0]
 
             # --------------------------------------------
             # New line number
@@ -989,9 +932,7 @@ def change_plan(
                 (contract_id,),
             )
 
-            new_line_number = (
-                cur.fetchone()[0]
-            )
+            new_line_number = cur.fetchone()[0]
 
             # --------------------------------------------
             # New contract detail
@@ -1054,9 +995,7 @@ def change_plan(
                 """
             )
 
-            new_rate_id = (
-                cur.fetchone()[0]
-            )
+            new_rate_id = cur.fetchone()[0]
 
             cur.execute(
                 """
@@ -1089,13 +1028,11 @@ def change_plan(
         conn.commit()
 
     except Exception:
-
         conn.rollback()
 
         raise
 
     finally:
-
         conn.close()
 
 
@@ -1103,36 +1040,27 @@ def change_plan(
 # CREATE SCREEN
 # ============================================================
 
+
 def create_contract_screen():
 
     st.subheader("Create Contract")
 
-    st.caption(
-        "Create a contract for an existing customer."
-    )
+    st.caption("Create a contract for an existing customer.")
 
     # --------------------------------------------------------
     # Load customers
     # --------------------------------------------------------
 
     try:
-
         customers = get_customers()
 
     except Exception as e:
-
-        st.error(
-            f"Unable to load customers: {e}"
-        )
+        st.error(f"Unable to load customers: {e}")
 
         return
 
     if customers.empty:
-
-        st.warning(
-            "No customers exist. "
-            "Create a customer first."
-        )
+        st.warning("No customers exist. Create a customer first.")
 
         return
 
@@ -1141,22 +1069,15 @@ def create_contract_screen():
     # --------------------------------------------------------
 
     try:
-
         products = get_active_products()
 
     except Exception as e:
-
-        st.error(
-            f"Unable to load products: {e}"
-        )
+        st.error(f"Unable to load products: {e}")
 
         return
 
     if products.empty:
-
-        st.warning(
-            "No active products/rate schedules found."
-        )
+        st.warning("No active products/rate schedules found.")
 
         return
 
@@ -1167,46 +1088,34 @@ def create_contract_screen():
     customer_options = {}
 
     for row in customers.itertuples():
-
         label = (
-            f"{row.customer_number} | "
-            f"{row.first_name} "
-            f"{row.last_name} | "
-            f"{row.email}"
+            f"{row.customer_number} | {row.first_name} {row.last_name} | {row.email}"
         )
 
-        customer_options[label] = int(
-            row.customer_id
-        )
+        customer_options[label] = int(row.customer_id)
 
     selected_customer = st.selectbox(
         "Customer *",
         list(customer_options.keys()),
     )
 
-    customer_id = customer_options[
-        selected_customer
-    ]
+    customer_id = customer_options[selected_customer]
 
     # --------------------------------------------------------
     # Contract Header
     # --------------------------------------------------------
 
-    st.markdown(
-        "### Contract Information"
-    )
+    st.markdown("### Contract Information")
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
-
         contract_type = st.selectbox(
             "Contract Type *",
             CONTRACT_TYPES,
         )
 
     with col2:
-
         contract_status = st.selectbox(
             "Contract Status *",
             [
@@ -1216,7 +1125,6 @@ def create_contract_screen():
         )
 
     with col3:
-
         auto_renew = st.checkbox(
             "Auto Renew",
             value=True,
@@ -1233,18 +1141,10 @@ def create_contract_screen():
     )
 
     if end_date:
-
-        st.info(
-            f"Contract End Date: "
-            f"**{end_date}**"
-        )
+        st.info(f"Contract End Date: **{end_date}**")
 
     else:
-
-        st.info(
-            "Monthly contract: "
-            "**Open-ended**"
-        )
+        st.info("Monthly contract: **Open-ended**")
 
     st.divider()
 
@@ -1252,9 +1152,7 @@ def create_contract_screen():
     # Contract Lines
     # --------------------------------------------------------
 
-    st.markdown(
-        "### Contract Details"
-    )
+    st.markdown("### Contract Details")
 
     number_of_lines = st.number_input(
         "Number of Contract Details",
@@ -1270,17 +1168,13 @@ def create_contract_screen():
         1,
         number_of_lines + 1,
     ):
-
-        st.markdown(
-            f"#### Line {line_number}"
-        )
+        st.markdown(f"#### Line {line_number}")
 
         col1, col2 = st.columns(2)
 
         product_options = {}
 
         for row in products.itertuples():
-
             label = (
                 f"{row.product_code} - "
                 f"{row.product_name} | "
@@ -1292,19 +1186,15 @@ def create_contract_screen():
             product_options[label] = row
 
         with col1:
-
             selected_label = st.selectbox(
                 "Product",
                 list(product_options.keys()),
                 key=f"product_{line_number}",
             )
 
-        product = product_options[
-            selected_label
-        ]
+        product = product_options[selected_label]
 
         with col2:
-
             quantity = st.number_input(
                 "Quantity",
                 min_value=1,
@@ -1316,12 +1206,9 @@ def create_contract_screen():
 
         col1, col2, col3 = st.columns(3)
 
-        default_price = float(
-            product.monthly_charge
-        )
+        default_price = float(product.monthly_charge)
 
         with col1:
-
             monthly_price = st.number_input(
                 "Agreed Monthly Price",
                 min_value=0.0,
@@ -1331,7 +1218,6 @@ def create_contract_screen():
             )
 
         with col2:
-
             discount = st.number_input(
                 "Discount",
                 min_value=0.0,
@@ -1341,10 +1227,7 @@ def create_contract_screen():
             )
 
         with col3:
-
-            tax_percent = float(
-                product.tax_percentage
-            )
+            tax_percent = float(product.tax_percentage)
 
             st.number_input(
                 "Tax %",
@@ -1354,25 +1237,16 @@ def create_contract_screen():
                 key=f"tax_{line_number}",
             )
 
-        base = (
-            Decimal(str(monthly_price))
-            * quantity
-        )
+        base = Decimal(str(monthly_price)) * quantity
 
-        discount_decimal = Decimal(
-            str(discount)
-        )
+        discount_decimal = Decimal(str(discount))
 
         taxable = max(
             Decimal("0"),
             base - discount_decimal,
         )
 
-        tax = (
-            taxable
-            * Decimal(str(tax_percent))
-            / Decimal("100")
-        )
+        tax = taxable * Decimal(str(tax_percent)) / Decimal("100")
 
         total = taxable + tax
 
@@ -1394,27 +1268,16 @@ def create_contract_screen():
         )
 
         if discount_decimal > base:
-
-            st.error(
-                f"Line {line_number}: "
-                "discount cannot exceed "
-                "base amount."
-            )
+            st.error(f"Line {line_number}: discount cannot exceed base amount.")
 
         detail_rows.append(
             {
-                "product_id":
-                    int(product.product_id),
-                "rate_schedule_id":
-                    int(product.rate_schedule_id),
-                "quantity":
-                    int(quantity),
-                "monthly_price":
-                    monthly_price,
-                "discount":
-                    discount,
-                "tax_percent":
-                    tax_percent,
+                "product_id": int(product.product_id),
+                "rate_schedule_id": int(product.rate_schedule_id),
+                "quantity": int(quantity),
+                "monthly_price": monthly_price,
+                "discount": discount,
+                "tax_percent": tax_percent,
             }
         )
 
@@ -1427,38 +1290,20 @@ def create_contract_screen():
     total_monthly = Decimal("0")
 
     for detail in detail_rows:
+        base = Decimal(str(detail["monthly_price"])) * detail["quantity"]
 
-        base = (
-            Decimal(
-                str(detail["monthly_price"])
-            )
-            * detail["quantity"]
-        )
-
-        discount = Decimal(
-            str(detail["discount"])
-        )
+        discount = Decimal(str(detail["discount"]))
 
         taxable = max(
             Decimal("0"),
             base - discount,
         )
 
-        tax = (
-            taxable
-            * Decimal(
-                str(detail["tax_percent"])
-            )
-            / Decimal("100")
-        )
+        tax = taxable * Decimal(str(detail["tax_percent"])) / Decimal("100")
 
-        total_monthly += (
-            taxable + tax
-        )
+        total_monthly += taxable + tax
 
-    st.markdown(
-        "### Contract Billing Summary"
-    )
+    st.markdown("### Contract Billing Summary")
 
     c1, c2 = st.columns(2)
 
@@ -1481,37 +1326,22 @@ def create_contract_screen():
         type="primary",
         use_container_width=True,
     ):
-
         invalid = False
 
         for detail in detail_rows:
+            base = Decimal(str(detail["monthly_price"])) * detail["quantity"]
 
-            base = (
-                Decimal(
-                    str(detail["monthly_price"])
-                )
-                * detail["quantity"]
-            )
-
-            discount = Decimal(
-                str(detail["discount"])
-            )
+            discount = Decimal(str(detail["discount"]))
 
             if discount > base:
-
                 invalid = True
 
         if invalid:
-
-            st.error(
-                "Please correct the discount "
-                "values before creating the contract."
-            )
+            st.error("Please correct the discount values before creating the contract.")
 
             return
 
         try:
-
             result = create_contract(
                 customer_id=customer_id,
                 contract_type=contract_type,
@@ -1521,13 +1351,9 @@ def create_contract_screen():
                 details=detail_rows,
             )
 
-            st.success(
-                "Contract created successfully."
-            )
+            st.success("Contract created successfully.")
 
-            st.markdown(
-                "### Contract Created"
-            )
+            st.markdown("### Contract Created")
 
             c1, c2, c3 = st.columns(3)
 
@@ -1543,16 +1369,11 @@ def create_contract_screen():
 
             c3.metric(
                 "Monthly Charge",
-                format_currency(
-                    total_monthly
-                ),
+                format_currency(total_monthly),
             )
 
         except Exception as e:
-
-            st.error(
-                "Contract creation failed."
-            )
+            st.error("Contract creation failed.")
 
             st.exception(e)
 
@@ -1561,40 +1382,29 @@ def create_contract_screen():
 # SEARCH SCREEN
 # ============================================================
 
+
 def search_contract_screen():
 
     st.subheader("Search Contract")
 
-    st.caption(
-        "Search contracts by contract number "
-        "or customer information."
-    )
+    st.caption("Search contracts by contract number or customer information.")
 
-    with st.form(
-        "contract_search_form"
-    ):
-
+    with st.form("contract_search_form"):
         c1, c2, c3 = st.columns(3)
 
         with c1:
-
             search_text = st.text_input(
                 "Search",
-                placeholder=(
-                    "Contract number / customer "
-                    "number / name / email"
-                ),
+                placeholder=("Contract number / customer number / name / email"),
             )
 
         with c2:
-
             status = st.selectbox(
                 "Status",
                 ["All"] + CONTRACT_STATUSES,
             )
 
         with c3:
-
             contract_type = st.selectbox(
                 "Contract Type",
                 ["All"] + CONTRACT_TYPES,
@@ -1606,67 +1416,37 @@ def search_contract_screen():
         )
 
     if submitted:
-
         try:
-
             df = search_contracts(
                 search_text=search_text.strip(),
-                status=(
-                    None
-                    if status == "All"
-                    else status
-                ),
-                contract_type=(
-                    None
-                    if contract_type == "All"
-                    else contract_type
-                ),
+                status=(None if status == "All" else status),
+                contract_type=(None if contract_type == "All" else contract_type),
             )
 
-            st.session_state[
-                "contract_search_results"
-            ] = df
+            st.session_state["contract_search_results"] = df
 
         except Exception as e:
+            st.error(f"Search failed: {e}")
 
-            st.error(
-                f"Search failed: {e}"
-            )
-
-    df = st.session_state.get(
-        "contract_search_results"
-    )
+    df = st.session_state.get("contract_search_results")
 
     if df is None:
         return
 
     if df.empty:
-
-        st.warning(
-            "No contracts found."
-        )
+        st.warning("No contracts found.")
 
         return
 
-    st.success(
-        f"{len(df)} contract(s) found."
-    )
+    st.success(f"{len(df)} contract(s) found.")
 
     display_df = df.copy()
 
-    display_df[
-        "customer_name"
-    ] = (
-        display_df["first_name"]
-        + " "
-        + display_df["last_name"]
+    display_df["customer_name"] = (
+        display_df["first_name"] + " " + display_df["last_name"]
     )
 
-    display_df[
-        "monthly_value"
-    ] = display_df[
-        "monthly_value"
-    ].apply(format_currency)
+    display_df["monthly_value"] = display_df["monthly_value"].apply(format_currency)
 
     st.dataframe(
         display_df[
@@ -1694,7 +1474,6 @@ def search_contract_screen():
     options = {}
 
     for row in df.itertuples():
-
         label = (
             f"{row.contract_number} | "
             f"{row.customer_number} | "
@@ -1702,31 +1481,22 @@ def search_contract_screen():
             f"{row.last_name}"
         )
 
-        options[label] = int(
-            row.contract_id
-        )
+        options[label] = int(row.contract_id)
 
     selected = st.selectbox(
         "Select Contract",
         list(options.keys()),
     )
 
-    selected_contract_id = options[
-        selected
-    ]
+    selected_contract_id = options[selected]
 
     if st.button(
         "Open Contract 360",
         use_container_width=True,
     ):
+        st.session_state["selected_contract_id"] = selected_contract_id
 
-        st.session_state[
-            "selected_contract_id"
-        ] = selected_contract_id
-
-        st.session_state[
-            "contract_management_mode"
-        ] = "Contract 360"
+        st.session_state["contract_management_mode"] = "Contract 360"
 
         st.rerun()
 
@@ -1735,53 +1505,40 @@ def search_contract_screen():
 # EDIT CONTRACT
 # ============================================================
 
+
 def edit_contract_screen():
 
     st.subheader("Edit Contract")
 
-    st.caption(
-        "Update contract status, renewal setting "
-        "and end date."
-    )
+    st.caption("Update contract status, renewal setting and end date.")
 
     search_text = st.text_input(
         "Find Contract",
-        placeholder=(
-            "Contract number / customer number"
-        ),
+        placeholder=("Contract number / customer number"),
     )
 
     if not search_text:
-
         return
 
     try:
-
         df = search_contracts(
             search_text=search_text,
             limit=20,
         )
 
     except Exception as e:
-
-        st.error(
-            f"Search failed: {e}"
-        )
+        st.error(f"Search failed: {e}")
 
         return
 
     if df.empty:
-
-        st.warning(
-            "No contracts found."
-        )
+        st.warning("No contracts found.")
 
         return
 
     options = {}
 
     for row in df.itertuples():
-
         label = (
             f"{row.contract_number} | "
             f"{row.customer_number} | "
@@ -1789,9 +1546,7 @@ def edit_contract_screen():
             f"{row.last_name}"
         )
 
-        options[label] = int(
-            row.contract_id
-        )
+        options[label] = int(row.contract_id)
 
     selected = st.selectbox(
         "Select Contract",
@@ -1801,24 +1556,16 @@ def edit_contract_screen():
 
     contract_id = options[selected]
 
-    contract = get_contract(
-        contract_id
-    )
+    contract = get_contract(contract_id)
 
     if not contract:
-
-        st.error(
-            "Contract not found."
-        )
+        st.error("Contract not found.")
 
         return
 
     st.divider()
 
-    st.markdown(
-        f"### Editing "
-        f"`{contract['contract_number']}`"
-    )
+    st.markdown(f"### Editing `{contract['contract_number']}`")
 
     st.write(
         f"Customer: "
@@ -1827,23 +1574,13 @@ def edit_contract_screen():
         f"{contract['last_name']}**"
     )
 
-    with st.form(
-        "edit_contract_form"
-    ):
-
+    with st.form("edit_contract_form"):
         col1, col2 = st.columns(2)
 
         with col1:
-
             status_index = (
-                CONTRACT_STATUSES.index(
-                    contract[
-                        "contract_status"
-                    ]
-                )
-                if contract[
-                    "contract_status"
-                ] in CONTRACT_STATUSES
+                CONTRACT_STATUSES.index(contract["contract_status"])
+                if contract["contract_status"] in CONTRACT_STATUSES
                 else 0
             )
 
@@ -1854,35 +1591,24 @@ def edit_contract_screen():
             )
 
         with col2:
-
             auto_renew = st.checkbox(
                 "Auto Renew",
-                value=bool(
-                    contract["auto_renew"]
-                ),
+                value=bool(contract["auto_renew"]),
             )
 
         end_date = st.date_input(
             "Contract End Date",
-            value=(
-                contract["end_date"]
-                if contract["end_date"]
-                else date.today()
-            ),
+            value=(contract["end_date"] if contract["end_date"] else date.today()),
         )
 
-        update_button = (
-            st.form_submit_button(
-                "Update Contract",
-                type="primary",
-                use_container_width=True,
-            )
+        update_button = st.form_submit_button(
+            "Update Contract",
+            type="primary",
+            use_container_width=True,
         )
 
     if update_button:
-
         try:
-
             update_contract(
                 contract_id=contract_id,
                 contract_status=contract_status,
@@ -1890,28 +1616,22 @@ def edit_contract_screen():
                 end_date=end_date,
             )
 
-            st.success(
-                "Contract updated successfully."
-            )
+            st.success("Contract updated successfully.")
 
         except Exception as e:
-
-            st.error(
-                f"Update failed: {e}"
-            )
+            st.error(f"Update failed: {e}")
 
 
 # ============================================================
 # RENEW CONTRACT
 # ============================================================
 
+
 def renew_contract_screen():
 
     st.subheader("Renew Contract")
 
-    st.caption(
-        "Renew an existing contract."
-    )
+    st.caption("Renew an existing contract.")
 
     search_text = st.text_input(
         "Find Contract",
@@ -1920,36 +1640,27 @@ def renew_contract_screen():
     )
 
     if not search_text:
-
         return
 
     try:
-
         df = search_contracts(
             search_text=search_text,
             limit=20,
         )
 
     except Exception as e:
-
-        st.error(
-            f"Search failed: {e}"
-        )
+        st.error(f"Search failed: {e}")
 
         return
 
     if df.empty:
-
-        st.warning(
-            "No contracts found."
-        )
+        st.warning("No contracts found.")
 
         return
 
     options = {}
 
     for row in df.itertuples():
-
         label = (
             f"{row.contract_number} | "
             f"{row.customer_number} | "
@@ -1957,9 +1668,7 @@ def renew_contract_screen():
             f"{row.last_name}"
         )
 
-        options[label] = int(
-            row.contract_id
-        )
+        options[label] = int(row.contract_id)
 
     selected = st.selectbox(
         "Contract",
@@ -1969,38 +1678,27 @@ def renew_contract_screen():
 
     contract_id = options[selected]
 
-    contract = get_contract(
-        contract_id
-    )
+    contract = get_contract(contract_id)
 
     if not contract:
-
         return
 
-    st.info(
-        f"Current contract: "
-        f"**{contract['contract_number']}**"
-    )
+    st.info(f"Current contract: **{contract['contract_number']}**")
 
     col1, col2 = st.columns(2)
 
     with col1:
-
         new_contract_type = st.selectbox(
             "Renewal Contract Type",
             CONTRACT_TYPES,
             index=(
-                CONTRACT_TYPES.index(
-                    contract["contract_type"]
-                )
-                if contract["contract_type"]
-                in CONTRACT_TYPES
+                CONTRACT_TYPES.index(contract["contract_type"])
+                if contract["contract_type"] in CONTRACT_TYPES
                 else 0
             ),
         )
 
     with col2:
-
         new_start_date = st.date_input(
             "Renewal Start Date",
             value=date.today(),
@@ -2012,60 +1710,41 @@ def renew_contract_screen():
     )
 
     if new_end_date:
-
-        st.info(
-            f"New end date: **{new_end_date}**"
-        )
+        st.info(f"New end date: **{new_end_date}**")
 
     else:
-
-        st.info(
-            "Renewal will be open-ended."
-        )
+        st.info("Renewal will be open-ended.")
 
     if st.button(
         "🔄 Renew Contract",
         type="primary",
         use_container_width=True,
     ):
-
         try:
-
             end_date = renew_contract(
                 contract_id=contract_id,
                 new_start_date=new_start_date,
                 contract_type=new_contract_type,
             )
 
-            st.success(
-                f"Contract {contract['contract_number']} "
-                "renewed successfully."
-            )
+            st.success(f"Contract {contract['contract_number']} renewed successfully.")
 
-            st.info(
-                f"New end date: "
-                f"**{end_date or 'Open-ended'}**"
-            )
+            st.info(f"New end date: **{end_date or 'Open-ended'}**")
 
         except Exception as e:
-
-            st.error(
-                f"Renewal failed: {e}"
-            )
+            st.error(f"Renewal failed: {e}")
 
 
 # ============================================================
 # CHANGE PLAN
 # ============================================================
 
+
 def change_plan_screen():
 
     st.subheader("Upgrade / Downgrade Plan")
 
-    st.caption(
-        "Change the product associated with an "
-        "active contract."
-    )
+    st.caption("Change the product associated with an active contract.")
 
     search_text = st.text_input(
         "Find Contract",
@@ -2074,11 +1753,9 @@ def change_plan_screen():
     )
 
     if not search_text:
-
         return
 
     try:
-
         contracts = search_contracts(
             search_text=search_text,
             limit=20,
@@ -2087,25 +1764,18 @@ def change_plan_screen():
         products = get_active_products()
 
     except Exception as e:
-
-        st.error(
-            f"Unable to load data: {e}"
-        )
+        st.error(f"Unable to load data: {e}")
 
         return
 
     if contracts.empty:
-
-        st.warning(
-            "No contracts found."
-        )
+        st.warning("No contracts found.")
 
         return
 
     options = {}
 
     for row in contracts.itertuples():
-
         label = (
             f"{row.contract_number} | "
             f"{row.customer_number} | "
@@ -2113,9 +1783,7 @@ def change_plan_screen():
             f"{row.last_name}"
         )
 
-        options[label] = int(
-            row.contract_id
-        )
+        options[label] = int(row.contract_id)
 
     selected_contract = st.selectbox(
         "Contract",
@@ -2123,28 +1791,18 @@ def change_plan_screen():
         key="change_plan_contract",
     )
 
-    contract_id = options[
-        selected_contract
-    ]
+    contract_id = options[selected_contract]
 
-    contract = get_contract(
-        contract_id
-    )
+    contract = get_contract(contract_id)
 
-    details = get_contract_details(
-        contract_id
-    )
+    details = get_contract_details(contract_id)
 
     if contract is None:
-
         return
 
-    st.markdown(
-        "### Current Plan"
-    )
+    st.markdown("### Current Plan")
 
     if not details.empty:
-
         current = details.iloc[-1]
 
         c1, c2, c3 = st.columns(3)
@@ -2161,21 +1819,16 @@ def change_plan_screen():
 
         c3.metric(
             "Monthly Price",
-            format_currency(
-                current["agreed_monthly_price"]
-            ),
+            format_currency(current["agreed_monthly_price"]),
         )
 
     st.divider()
 
-    st.markdown(
-        "### New Plan"
-    )
+    st.markdown("### New Plan")
 
     product_options = {}
 
     for row in products.itertuples():
-
         label = (
             f"{row.product_code} - "
             f"{row.product_name} | "
@@ -2191,16 +1844,12 @@ def change_plan_screen():
         key="new_plan_product",
     )
 
-    product = product_options[
-        selected_product
-    ]
+    product = product_options[selected_product]
 
     new_monthly_price = st.number_input(
         "Agreed Monthly Price",
         min_value=0.0,
-        value=float(
-            product.monthly_charge
-        ),
+        value=float(product.monthly_charge),
         step=10.0,
         key="change_plan_price",
     )
@@ -2216,71 +1865,46 @@ def change_plan_screen():
         type="primary",
         use_container_width=True,
     ):
-
         try:
-
             change_plan(
                 contract_id=contract_id,
-                new_product_id=int(
-                    product.product_id
-                ),
-                new_rate_schedule_id=int(
-                    product.rate_schedule_id
-                ),
-                new_monthly_price=
-                    new_monthly_price,
-                new_tax_percent=float(
-                    product.tax_percentage
-                ),
+                new_product_id=int(product.product_id),
+                new_rate_schedule_id=int(product.rate_schedule_id),
+                new_monthly_price=new_monthly_price,
+                new_tax_percent=float(product.tax_percentage),
                 effective_date=effective_date,
             )
 
-            st.success(
-                "Plan changed successfully."
-            )
+            st.success("Plan changed successfully.")
 
         except Exception as e:
-
-            st.error(
-                f"Plan change failed: {e}"
-            )
+            st.error(f"Plan change failed: {e}")
 
 
 # ============================================================
 # CONTRACT 360
 # ============================================================
 
+
 def contract_360_screen():
 
     st.subheader("Contract 360")
 
-    contract_id = st.session_state.get(
-        "selected_contract_id"
-    )
+    contract_id = st.session_state.get("selected_contract_id")
 
     if not contract_id:
-
-        st.info(
-            "Select a contract from Search Contract."
-        )
+        st.info("Select a contract from Search Contract.")
 
         return
 
-    contract = get_contract(
-        contract_id
-    )
+    contract = get_contract(contract_id)
 
     if not contract:
-
-        st.error(
-            "Contract not found."
-        )
+        st.error("Contract not found.")
 
         return
 
-    details = get_contract_details(
-        contract_id
-    )
+    details = get_contract_details(contract_id)
 
     # --------------------------------------------------------
     # Header
@@ -2303,22 +1927,13 @@ def contract_360_screen():
     monthly_value = Decimal("0")
 
     for _, row in details.iterrows():
+        price = Decimal(str(row["agreed_monthly_price"]))
 
-        price = Decimal(
-            str(row["agreed_monthly_price"])
-        )
+        quantity = int(row["quantity"])
 
-        quantity = int(
-            row["quantity"]
-        )
+        discount = Decimal(str(row["discount_amount"]))
 
-        discount = Decimal(
-            str(row["discount_amount"])
-        )
-
-        monthly_value += (
-            price * quantity
-        ) - discount
+        monthly_value += (price * quantity) - discount
 
     c1, c2, c3, c4 = st.columns(4)
 
@@ -2339,9 +1954,7 @@ def contract_360_screen():
 
     c4.metric(
         "Monthly Value",
-        format_currency(
-            monthly_value
-        ),
+        format_currency(monthly_value),
     )
 
     st.divider()
@@ -2350,43 +1963,23 @@ def contract_360_screen():
     # Contract Header
     # --------------------------------------------------------
 
-    st.markdown(
-        "### Contract Information"
-    )
+    st.markdown("### Contract Information")
 
     c1, c2, c3 = st.columns(3)
 
-    c1.write(
-        f"**Contract ID:** "
-        f"{contract['contract_id']}"
-    )
+    c1.write(f"**Contract ID:** {contract['contract_id']}")
 
-    c2.write(
-        f"**Customer ID:** "
-        f"{contract['customer_id']}"
-    )
+    c2.write(f"**Customer ID:** {contract['customer_id']}")
 
-    c3.write(
-        f"**Auto Renew:** "
-        f"{'Yes' if contract['auto_renew'] else 'No'}"
-    )
+    c3.write(f"**Auto Renew:** {'Yes' if contract['auto_renew'] else 'No'}")
 
     c1, c2, c3 = st.columns(3)
 
-    c1.write(
-        f"**Start Date:** "
-        f"{contract['start_date']}"
-    )
+    c1.write(f"**Start Date:** {contract['start_date']}")
 
-    c2.write(
-        f"**End Date:** "
-        f"{contract['end_date'] or 'Open-ended'}"
-    )
+    c2.write(f"**End Date:** {contract['end_date'] or 'Open-ended'}")
 
-    c3.write(
-        f"**Status:** "
-        f"{contract['contract_status']}"
-    )
+    c3.write(f"**Status:** {contract['contract_status']}")
 
     st.divider()
 
@@ -2394,32 +1987,17 @@ def contract_360_screen():
     # Customer
     # --------------------------------------------------------
 
-    st.markdown(
-        "### Customer"
-
-    )
+    st.markdown("### Customer")
 
     c1, c2 = st.columns(2)
 
     with c1:
+        st.write(f"**Customer Number:** {contract['customer_number']}")
 
-        st.write(
-            f"**Customer Number:** "
-            f"{contract['customer_number']}"
-        )
-
-        st.write(
-            f"**Customer Name:** "
-            f"{contract['first_name']} "
-            f"{contract['last_name']}"
-        )
+        st.write(f"**Customer Name:** {contract['first_name']} {contract['last_name']}")
 
     with c2:
-
-        st.write(
-            f"**Email:** "
-            f"{contract['email']}"
-        )
+        st.write(f"**Email:** {contract['email']}")
 
     st.divider()
 
@@ -2427,43 +2005,27 @@ def contract_360_screen():
     # Contract Details
     # --------------------------------------------------------
 
-    st.markdown(
-        "### Contract Details"
-    )
+    st.markdown("### Contract Details")
 
     if details.empty:
-
-        st.info(
-            "No contract details found."
-        )
+        st.info("No contract details found.")
 
         return
 
     display = details.copy()
 
     display["monthly_value"] = (
-        display["agreed_monthly_price"]
-        * display["quantity"]
+        display["agreed_monthly_price"] * display["quantity"]
         - display["discount_amount"]
     )
 
-    display[
-        "monthly_value"
-    ] = display[
-        "monthly_value"
-    ].apply(format_currency)
+    display["monthly_value"] = display["monthly_value"].apply(format_currency)
 
-    display[
-        "agreed_monthly_price"
-    ] = display[
-        "agreed_monthly_price"
-    ].apply(format_currency)
+    display["agreed_monthly_price"] = display["agreed_monthly_price"].apply(
+        format_currency
+    )
 
-    display[
-        "discount_amount"
-    ] = display[
-        "discount_amount"
-    ].apply(format_currency)
+    display["discount_amount"] = display["discount_amount"].apply(format_currency)
 
     st.dataframe(
         display[
@@ -2493,19 +2055,15 @@ def contract_360_screen():
     # Product Cards
     # --------------------------------------------------------
 
-    st.markdown(
-        "### Product Details"
-    )
+    st.markdown("### Product Details")
 
     for _, row in details.iterrows():
-
         with st.expander(
             f"Line {row['line_number']} - "
             f"{row['product_code']} - "
             f"{row['product_name']}",
             expanded=True,
         ):
-
             c1, c2, c3, c4 = st.columns(4)
 
             c1.metric(
@@ -2529,29 +2087,16 @@ def contract_360_screen():
             )
 
             st.write(
-                f"**Monthly Price:** "
-                f"{format_currency(row['agreed_monthly_price'])}"
+                f"**Monthly Price:** {format_currency(row['agreed_monthly_price'])}"
             )
 
-            st.write(
-                f"**Discount:** "
-                f"{format_currency(row['discount_amount'])}"
-            )
+            st.write(f"**Discount:** {format_currency(row['discount_amount'])}")
 
-            st.write(
-                f"**Tax:** "
-                f"{row['tax_percent']}%"
-            )
+            st.write(f"**Tax:** {row['tax_percent']}%")
 
-            st.write(
-                f"**Effective From:** "
-                f"{row['effective_from']}"
-            )
+            st.write(f"**Effective From:** {row['effective_from']}")
 
-            st.write(
-                f"**Effective To:** "
-                f"{row['effective_to'] or 'Open-ended'}"
-            )
+            st.write(f"**Effective To:** {row['effective_to'] or 'Open-ended'}")
 
     st.divider()
 
@@ -2559,10 +2104,7 @@ def contract_360_screen():
         "← Back to Contract Search",
         use_container_width=True,
     ):
-
-        st.session_state[
-            "contract_management_mode"
-        ] = "Search"
+        st.session_state["contract_management_mode"] = "Search"
 
         st.rerun()
 
@@ -2571,16 +2113,12 @@ def contract_360_screen():
 # MAIN CONTRACT MANAGEMENT SCREEN
 # ============================================================
 
+
 def contract_management_screen():
 
-    st.title(
-        "📄 Contract Management"
-    )
+    st.title("📄 Contract Management")
 
-    st.caption(
-        "Manage ISP contracts, contract details, "
-        "renewals and plan changes."
-    )
+    st.caption("Manage ISP contracts, contract details, renewals and plan changes.")
 
     modes = [
         "Create",
@@ -2597,44 +2135,33 @@ def contract_management_screen():
     )
 
     if current_mode not in modes:
-
         current_mode = "Create"
 
     selected_mode = st.radio(
         "Contract Management",
         modes,
-        index=modes.index(
-            current_mode
-        ),
+        index=modes.index(current_mode),
         horizontal=True,
     )
 
-    st.session_state[
-        "contract_management_mode"
-    ] = selected_mode
+    st.session_state["contract_management_mode"] = selected_mode
 
     st.divider()
 
     if selected_mode == "Create":
-
         create_contract_screen()
 
     elif selected_mode == "Search":
-
         search_contract_screen()
 
     elif selected_mode == "Edit":
-
         edit_contract_screen()
 
     elif selected_mode == "Renew":
-
         renew_contract_screen()
 
     elif selected_mode == "Change Plan":
-
         change_plan_screen()
 
     elif selected_mode == "Contract 360":
-
         contract_360_screen()

@@ -15,6 +15,9 @@ from customer_management import customer_management_screen
 from contract_management import contract_management_screen
 from service_management import service_management_screen
 from network_management import network_management_screen
+from service_provisioning import service_provisioning_screen
+from billing import billing_dashboard
+from dashboard import dashboard
 
 from services.customer_service import (
     customer_exists,
@@ -113,11 +116,21 @@ with st.sidebar:
             "Customer Management",
             "Contract Management",
             "Service Management",
+            "Service Provisioning",
             "Network Management",
+            "Billing",
             "Create Customer & Contract",
             "Database Health",
         ],
     )
+
+
+if page == "Dashboard":
+
+    dashboard()
+
+    st.stop()
+
 
 if page == "Customer Management":
 
@@ -137,11 +150,25 @@ if page == "Service Management":
 
     st.stop()    
 
+if page == "Service Provisioning":
+
+    service_provisioning_screen()
+
+    st.stop()
+
 if page == "Network Management":
 
     network_management_screen()
 
     st.stop()    
+
+if page == "Billing":
+
+    billing_dashboard()
+
+    st.stop()    
+
+
 
     st.divider()
 
