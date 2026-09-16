@@ -319,7 +319,7 @@ if page == "Create Customer & Contract":
 
     with col1:
         contract_type = st.selectbox(
-            "Contract Type *",
+            "Contract  Type *",
             [
                 "MONTHLY",
                 "12_MONTH",
@@ -330,11 +330,7 @@ if page == "Create Customer & Contract":
     with col2:
         contract_status = st.selectbox(
             "Contract Status *",
-            [
-                "ACTIVE",
-                "PENDING",
-                "DE-ACTIVE",
-            ],
+            ["ACTIVE", "PENDING"],
         )
 
     with col3:
