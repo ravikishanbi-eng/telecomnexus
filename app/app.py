@@ -319,7 +319,7 @@ if page == "Create Customer & Contract":
 
     with col1:
         contract_type = st.selectbox(
-            "Contract Type *",
+            "Contract  Type *",
             [
                 "MONTHLY",
                 "12_MONTH",
