@@ -1,3 +1,5 @@
+create database if not exists telecomnexus_db;
+
 CREATE SCHEMA IF NOT EXISTS crm;
 CREATE SCHEMA IF NOT EXISTS prd;
 CREATE SCHEMA IF NOT EXISTS inv;
